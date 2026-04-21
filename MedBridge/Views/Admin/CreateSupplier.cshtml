@@ -1,0 +1,133 @@
+@using MedBridge.ViewModels.Admin
+@model CreateSupplierViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Add Supplier";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Add Supplier</h1>
+        <p class="page-subheading">Register a new pharmaceutical supplier. A portal login will be created automatically.</p>
+    </div>
+    <a asp-action="Suppliers" class="btn btn-outline">← Back to Suppliers</a>
+</div>
+
+<div class="info-banner">
+    ℹ️ A <strong>Supplier Portal account</strong> will be automatically created for the contact person so they can log in, view purchase orders, and upload invoices.
+</div>
+
+<div class="card" style="max-width: 860px;">
+    <div class="card-body">
+        <form asp-action="CreateSupplier" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+            <!-- Company Info -->
+            <div class="form-section-title">Company Information</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label" asp-for="Name">Company / Supplier Name <span class="required">*</span></label>
+                    <input class="form-control" asp-for="Name" placeholder="e.g. Adcock Ingram (Pty) Ltd" />
+                    <span asp-validation-for="Name" class="field-validation-error"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" asp-for="RegistrationNo">Company Registration No <span class="required">*</span></label>
+                    <input class="form-control" asp-for="RegistrationNo" placeholder="e.g. 1949/034879/06" />
+                    <span asp-validation-for="RegistrationNo" class="field-validation-error"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" asp-for="TaxNumber">Tax / VAT Number</label>
+                    <input class="form-control" asp-for="TaxNumber" placeholder="e.g. 4550185679" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label" asp-for="ContactEmail">General Contact Email <span class="required">*</span></label>
+                    <input class="form-control" asp-for="ContactEmail" type="email" placeholder="orders@supplier.co.za" />
+                    <span asp-validation-for="ContactEmail" class="field-validation-error"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" asp-for="Phone">Phone</label>
+                    <input class="form-control" asp-for="Phone" type="tel" placeholder="+27 11 000 0000" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label" asp-for="Address">Address</label>
+                <textarea class="form-control" asp-for="Address" rows="2"
+                          placeholder="Street, City, Province, Postal Code"></textarea>
+            </div>
+
+            <!-- Banking Details -->
+            <div class="form-section">
+                <div class="form-section-title">Banking Details</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" asp-for="BankName">Bank Name <span class="required">*</span></label>
+                        <input class="form-control" asp-for="BankName" placeholder="e.g. First National Bank" />
+                        <span asp-validation-for="BankName" class="field-validation-error"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" asp-for="BankAccount">Account Number <span class="required">*</span></label>
+                        <input class="form-control" asp-for="BankAccount" placeholder="e.g. 62000000000" />
+                        <span asp-validation-for="BankAccount" class="field-validation-error"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" asp-for="BankBranch">Branch Code</label>
+                        <input class="form-control" asp-for="BankBranch" placeholder="e.g. 250655" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" asp-for="PaymentTerms">Payment Terms</label>
+                        <select class="form-control form-select" asp-for="PaymentTerms">
+                            <option value="30 days">30 days</option>
+                            <option value="60 days">60 days</option>
+                            <option value="7 days">7 days</option>
+                            <option value="14 days">14 days</option>
+                            <option value="COD">COD (Cash on Delivery)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Person -->
+            <div class="form-section">
+                <div class="form-section-title">Order Contact Person</div>
+                <p style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 16px;">
+                    This person will receive the supplier portal login to handle purchase orders and upload invoices.
+                </p>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" asp-for="ContactPersonName">Full Name <span class="required">*</span></label>
+                        <input class="form-control" asp-for="ContactPersonName" placeholder="e.g. Sipho Dlamini" />
+                        <span asp-validation-for="ContactPersonName" class="field-validation-error"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" asp-for="ContactPersonEmail">Email (Portal Login) <span class="required">*</span></label>
+                        <input class="form-control" asp-for="ContactPersonEmail" type="email" placeholder="sipho.dlamini@supplier.co.za" />
+                        <span asp-validation-for="ContactPersonEmail" class="field-validation-error"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" asp-for="ContactPersonPhone">Phone</label>
+                        <input class="form-control" asp-for="ContactPersonPhone" type="tel" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="form-section">
+                <div class="form-group">
+                    <label class="form-label" asp-for="Notes">Internal Notes</label>
+                    <textarea class="form-control" asp-for="Notes" rows="2"
+                              placeholder="Optional notes visible only to admins and procurement…"></textarea>
+                </div>
+            </div>
+
+            <div style="margin-top: 24px; display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-primary">Create Supplier &amp; Portal Account</button>
+                <a asp-action="Suppliers" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

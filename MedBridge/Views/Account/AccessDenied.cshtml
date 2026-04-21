@@ -1,0 +1,15 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Access Denied";
+}
+
+<div style="max-width: 480px; margin: 60px auto; text-align: center; padding: 0 24px;">
+    <div style="font-size: 64px; margin-bottom: 16px;">🔒</div>
+    <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">Access Denied</h2>
+    <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">
+        You don't have permission to view this page. Contact your administrator if you believe this is an error.
+    </p>
+    <a asp-controller="Dashboard" asp-action="Index" class="btn btn-primary">
+        ← Back to Dashboard
+    </a>
+</div>

@@ -1,0 +1,152 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">System Overview</h1>
+        <p class="page-subheading">Welcome back, @ViewBag.AdminName — @DateTime.Now.ToString("dddd, dd MMMM yyyy")</p>
+    </div>
+</div>
+
+<!-- System Stats -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">Total Users</div>
+        <div class="stat-value info">@ViewBag.TotalUsers</div>
+        <div class="stat-footer">Active accounts</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Clients</div>
+        <div class="stat-value">@ViewBag.TotalClients</div>
+        <div class="stat-footer">Hospitals &amp; Clinics</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Suppliers</div>
+        <div class="stat-value">@ViewBag.TotalSuppliers</div>
+        <div class="stat-footer">Registered suppliers</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Pending Approval</div>
+        <div class="stat-value warning">@ViewBag.PendingSuppliers</div>
+        <div class="stat-footer">Supplier approvals needed</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Medications</div>
+        <div class="stat-value">@ViewBag.TotalMedications</div>
+        <div class="stat-footer">Active stock items</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Audit Records</div>
+        <div class="stat-value amber">@ViewBag.AuditCount</div>
+        <div class="stat-footer">Blockchain entries</div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card" style="margin-bottom: 20px;">
+    <div class="card-header">
+        <span class="card-title">Quick Actions</span>
+    </div>
+    <div class="card-body" style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <a asp-action="CreateUser" class="btn btn-primary">+ Add User</a>
+        <a asp-action="CreateClient" class="btn btn-dark">+ Add Client</a>
+        <a asp-action="CreateSupplier" class="btn btn-outline">+ Add Supplier</a>
+        <a asp-action="AuditTrail" class="btn btn-outline">View Audit Trail</a>
+        <a asp-action="Blockchain" class="btn btn-outline">🔗 Blockchain</a>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <!-- Recent Users -->
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Recent Users</span>
+            <a asp-action="Users" class="btn btn-sm btn-outline">View All</a>
+        </div>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (ViewBag.RecentUsers != null)
+                    {
+                        foreach (var u in (IEnumerable<dynamic>)ViewBag.RecentUsers)
+                        {
+                            <tr>
+                                <td>
+                                    <div style="font-weight: 500;">@u.FullName</div>
+                                    <div style="font-size: 12px; color: var(--text-muted);">@u.Email</div>
+                                </td>
+                                <td><span class="role-badge role-@(((string)u.Role).ToLower())">@u.Role</span></td>
+                                <td>
+                                    @if ((bool)u.IsActive)
+                                    {
+                                        <span class="badge badge-active">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-inactive">Inactive</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pending Supplier Approvals -->
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Pending Supplier Approvals</span>
+            <a asp-action="Suppliers" class="btn btn-sm btn-outline">View All</a>
+        </div>
+        @if (ViewBag.PendingSupplierList != null && ((IEnumerable<dynamic>)ViewBag.PendingSupplierList).Any())
+        {
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Supplier</th>
+                            <th>Reg No</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in (IEnumerable<dynamic>)ViewBag.PendingSupplierList)
+                        {
+                            <tr>
+                                <td>
+                                    <div style="font-weight: 500;">@s.Name</div>
+                                    <div style="font-size: 12px; color: var(--text-muted);">@s.ContactEmail</div>
+                                </td>
+                                <td style="font-size: 12px;">@s.RegistrationNo</td>
+                                <td>
+                                    <form asp-action="ApproveSupplier" asp-route-id="@s.Id" method="post" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="empty-state" style="padding: 32px 24px;">
+                <div class="empty-state-icon" style="font-size: 32px;">✓</div>
+                <div class="empty-state-title" style="font-size: 14px;">No pending approvals</div>
+            </div>
+        }
+    </div>
+</div>

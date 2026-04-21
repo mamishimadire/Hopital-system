@@ -1,0 +1,98 @@
+@using MedBridge.Models
+@model IEnumerable<BlockchainBlock>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Blockchain";
+    int pg      = ViewBag.Page    ?? 1;
+    int total   = ViewBag.Total   ?? 0;
+    int perPage = ViewBag.PerPage ?? 20;
+    int pages   = (int)Math.Ceiling((double)total / perPage);
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Blockchain Audit Chain</h1>
+        <p class="page-subheading">SHA-256 proof-of-work immutable ledger — @total blocks</p>
+    </div>
+    <a asp-action="AuditTrail" class="btn btn-outline">📋 Audit Table View</a>
+</div>
+
+<div class="info-banner">
+    🔗 Each block contains a SHA-256 hash of the previous block, creating a tamper-evident chain. Any modification to a historical block will break the chain from that point forward.
+</div>
+
+@if (Model.Any())
+{
+    @foreach (var block in Model)
+    {
+        <div class="block-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
+                <div>
+                    <div class="block-index">Block #@block.BlockIndex</div>
+                    <div class="block-action">@block.Action</div>
+                    <div class="block-user">
+                        @block.UserName
+                        @if (!string.IsNullOrEmpty(block.Role))
+                        {
+                            <span style="margin-left: 6px; opacity: 0.7;">(@block.Role)</span>
+                        }
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div class="block-meta">@block.Timestamp.ToLocalTime().ToString("dd MMM yyyy HH:mm:ss")</div>
+                    <div class="block-meta" style="margin-top: 4px;">Nonce: @block.Nonce</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08);">
+                <div style="font-size: 10px; color: rgba(255,255,255,0.3); margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.8px;">Block Hash</div>
+                <div class="block-hash">@block.Hash</div>
+                @if (!string.IsNullOrEmpty(block.PreviousHash))
+                {
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 6px; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.8px;">Previous Hash</div>
+                    <div class="block-hash" style="color: rgba(245,166,35,0.5);">@block.PreviousHash</div>
+                }
+            </div>
+
+            @if (!string.IsNullOrEmpty(block.Data) && block.Data != "{}")
+            {
+                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06);">
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.3); margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.8px;">Payload</div>
+                    <div style="font-family: 'Courier New', monospace; font-size: 10.5px; color: rgba(255,255,255,0.5); word-break: break-all;">@block.Data</div>
+                </div>
+            }
+        </div>
+    }
+
+    @if (pages > 1)
+    {
+        int startPg = Math.Max(1, pg - 2);
+        int endPg   = Math.Min(pages, pg + 2);
+        <div class="pagination-bar" style="margin-top: 8px;">
+            @if (pg > 1)
+            {
+                <a asp-action="Blockchain" asp-route-pg="@(pg - 1)" class="page-btn">← Prev</a>
+            }
+            @for (int n = startPg; n <= endPg; n++)
+            {
+                <a asp-action="Blockchain" asp-route-pg="@n"
+                   class="page-btn @(n == pg ? "active" : "")">@n</a>
+            }
+            @if (pg < pages)
+            {
+                <a asp-action="Blockchain" asp-route-pg="@(pg + 1)" class="page-btn">Next →</a>
+            }
+            <span style="margin-left: 12px; font-size: 13px; color: var(--text-muted);">
+                Page @pg of @pages
+            </span>
+        </div>
+    }
+}
+else
+{
+    <div class="empty-state">
+        <div class="empty-state-icon">🔗</div>
+        <div class="empty-state-title">Blockchain is empty</div>
+        <div class="empty-state-text">The genesis block will be created when the application starts.</div>
+    </div>
+}
