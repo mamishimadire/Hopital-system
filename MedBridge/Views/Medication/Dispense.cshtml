@@ -1,0 +1,92 @@
+@model MedBridge.Models.Medication
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Dispense Medication";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Dispense Medication</h1>
+        <p class="page-subheading">This action will be permanently recorded on the blockchain</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline">← Back</a>
+</div>
+
+<div class="responsive-grid" style="display:grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start;">
+    <div class="card">
+        <div class="card-header"><span class="card-title">Dispense Details</span></div>
+        <div class="card-body">
+            <form asp-action="Dispense" asp-route-id="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                <div class="form-group">
+                    <label class="form-label">Quantity to Dispense <span style="color:var(--danger)">*</span></label>
+                    <input type="number" name="quantity" min="1" max="@Model.Quantity"
+                           class="form-control" placeholder="Enter quantity" required />
+                    <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">
+                        Available: <strong>@Model.Quantity @Model.Unit</strong>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes / Patient Reference</label>
+                    <textarea name="notes" class="form-control" rows="3"
+                              placeholder="Patient name, ward, or any relevant notes…"></textarea>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 16px;">
+                    <button type="submit" class="btn btn-primary">Dispense & Record on Blockchain</button>
+                    <a asp-action="Index" class="btn btn-outline">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div>
+        <div class="card">
+            <div class="card-header"><span class="card-title">Medication Info</span></div>
+            <div class="card-body" style="padding: 0;">
+                <div class="detail-row">
+                    <div class="detail-key">Code</div>
+                    <div class="detail-value text-mono" style="color:var(--amber-dark);">@Model.Code</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-key">Name</div>
+                    <div class="detail-value fw-600">@Model.Name</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-key">Batch</div>
+                    <div class="detail-value">@(Model.BatchNumber ?? "—")</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-key">Expiry</div>
+                    <div class="detail-value">
+                        @if (Model.ExpiryDate.HasValue)
+                        {
+                            <span class="badge @(Model.IsExpiringSoon ? "badge-pending" : "")">
+                                @Model.ExpiryDate.Value.ToString("dd MMM yyyy")
+                            </span>
+                        }
+                        else { <span>—</span> }
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-key">In Stock</div>
+                    <div class="detail-value">
+                        <span class="badge @(Model.IsOutOfStock ? "badge-out" : Model.IsLowStock ? "badge-pending" : "badge-approved")">
+                            @Model.Quantity @Model.Unit
+                        </span>
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-key">Unit Cost</div>
+                    <div class="detail-value">R @Model.UnitCost.ToString("N2")</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-key">Supplier</div>
+                    <div class="detail-value">@(Model.Supplier?.Name ?? "—")</div>
+                </div>
+            </div>
+        </div>
+        <div class="info-banner" style="margin-top: 12px; font-size: 12px;">
+            🔗 This dispense event will create a new block on the SHA-256 blockchain with your name, timestamp, and quantity.
+        </div>
+    </div>
+</div>

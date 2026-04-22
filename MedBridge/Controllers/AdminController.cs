@@ -17,17 +17,19 @@ public class AdminController : Controller
     private readonly UserManager<ApplicationUser> _users;
     private readonly RoleManager<IdentityRole> _roles;
     private readonly IAuditService _audit;
+    private readonly IBlockchainService _blockchain;
     private readonly IEmailService _email;
     private readonly ITokenUrlService _tokenUrl;
 
     public AdminController(ApplicationDbContext db, UserManager<ApplicationUser> users,
-        RoleManager<IdentityRole> roles, IAuditService audit,
+        RoleManager<IdentityRole> roles, IAuditService audit, IBlockchainService blockchain,
         IEmailService email, ITokenUrlService tokenUrl)
     {
-        _db       = db;
-        _users    = users;
-        _roles    = roles;
-        _audit    = audit;
+        _db         = db;
+        _users      = users;
+        _roles      = roles;
+        _audit      = audit;
+        _blockchain = blockchain;
         _email    = email;
         _tokenUrl = tokenUrl;
     }
@@ -420,9 +422,10 @@ public class AdminController : Controller
             .Skip((pg - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
-        ViewBag.Page    = pg;
-        ViewBag.PerPage = pageSize;
-        ViewBag.Total   = total;
+        ViewBag.Page       = pg;
+        ViewBag.PerPage    = pageSize;
+        ViewBag.Total      = total;
+        ViewBag.ChainValid = await _blockchain.ValidateChainAsync();
         return View(blocks);
     }
 

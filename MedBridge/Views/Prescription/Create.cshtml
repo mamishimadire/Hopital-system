@@ -1,0 +1,58 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "New Prescription";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">New Prescription</h1>
+        <p class="page-subheading">Will be recorded on the blockchain when dispensed</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline">← Back</a>
+</div>
+
+<div class="card" style="max-width: 640px;">
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div class="form-group">
+                <label class="form-label">Patient <span style="color:var(--danger)">*</span></label>
+                <select name="PatientId" class="form-control form-select" required>
+                    <option value="">— Select Patient —</option>
+                    @foreach (var item in (Microsoft.AspNetCore.Mvc.Rendering.SelectList)ViewBag.Patients)
+                    {
+                        <option value="@item.Value">@item.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Medication <span style="color:var(--danger)">*</span></label>
+                <select name="MedicationId" class="form-control form-select" required>
+                    <option value="">— Select Medication —</option>
+                    @foreach (var item in (Microsoft.AspNetCore.Mvc.Rendering.SelectList)ViewBag.Medications)
+                    {
+                        <option value="@item.Value">@item.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Quantity <span style="color:var(--danger)">*</span></label>
+                    <input type="number" name="Quantity" min="1" class="form-control" required />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Dosage Instructions</label>
+                    <input type="text" name="Dosage" class="form-control" placeholder="e.g. 1 tablet twice daily" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Notes</label>
+                <textarea name="Notes" class="form-control" rows="3" placeholder="Additional instructions…"></textarea>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 16px;">
+                <button type="submit" class="btn btn-primary">Create Prescription</button>
+                <a asp-action="Index" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>

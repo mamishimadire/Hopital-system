@@ -1,4 +1,5 @@
 @using MedBridge.Models
+@using MedBridge.Services
 @model IEnumerable<BlockchainBlock>
 @{
     Layout = "_Layout";
@@ -7,50 +8,120 @@
     int total   = ViewBag.Total   ?? 0;
     int perPage = ViewBag.PerPage ?? 20;
     int pages   = (int)Math.Ceiling((double)total / perPage);
+    bool chainValid = ViewBag.ChainValid ?? true;
 }
 
 <div class="page-header">
     <div>
         <h1 class="page-heading">Blockchain Audit Chain</h1>
-        <p class="page-subheading">SHA-256 proof-of-work immutable ledger — @total blocks</p>
+        <p class="page-subheading">SHA-256 · Proof-of-Work (difficulty: 000) · HMAC-signed · @total blocks</p>
     </div>
-    <a asp-action="AuditTrail" class="btn btn-outline">📋 Audit Table View</a>
+    <div style="display:flex; gap:10px; align-items:center;">
+        @if (chainValid)
+        {
+            <span class="badge badge-approved" style="font-size:13px; padding: 6px 14px;">✓ Chain Valid</span>
+        }
+        else
+        {
+            <span class="badge badge-out" style="font-size:13px; padding: 6px 14px;">⚠ Chain Compromised</span>
+        }
+        <a asp-action="AuditTrail" class="btn btn-outline">📋 Audit Table</a>
+    </div>
 </div>
 
 <div class="info-banner">
-    🔗 Each block contains a SHA-256 hash of the previous block, creating a tamper-evident chain. Any modification to a historical block will break the chain from that point forward.
+    🔗 Each block contains the SHA-256 hash of the previous block, creating a tamper-evident chain.
+    Every medication dispense, prescription, stock adjustment, and user action creates a new block mined with Proof-of-Work (hash starts with <code>000</code>) and signed with HMAC-SHA256.
+</div>
+
+<!-- Category legend -->
+<div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
+    @{
+        var categories = new[] {
+            (BlockchainCategory.Medication,   "#22c55e", "💊 Medication"),
+            (BlockchainCategory.Prescription, "#3b82f6", "📝 Prescription"),
+            (BlockchainCategory.Procurement,  "#f59e0b", "🛒 Procurement"),
+            (BlockchainCategory.UserMgmt,     "#8b5cf6", "👤 User Mgmt"),
+            (BlockchainCategory.HelpDesk,     "#06b6d4", "🎫 Help Desk"),
+            (BlockchainCategory.System,       "#6b7280", "⚙ System"),
+        };
+    }
+    @foreach (var (cat, color, label) in categories)
+    {
+        <span style="font-size:11px; padding:3px 10px; border-radius:12px; background:@(color)22; color:@color; border:1px solid @(color)44;">
+            @label
+        </span>
+    }
 </div>
 
 @if (Model.Any())
 {
     @foreach (var block in Model)
     {
-        <div class="block-card">
+        var catColor = block.Category switch {
+            BlockchainCategory.Medication   => "#22c55e",
+            BlockchainCategory.Prescription => "#3b82f6",
+            BlockchainCategory.Procurement  => "#f59e0b",
+            BlockchainCategory.UserMgmt     => "#8b5cf6",
+            BlockchainCategory.HelpDesk     => "#06b6d4",
+            _                               => "#6b7280"
+        };
+        var catIcon = block.Category switch {
+            BlockchainCategory.Medication   => "💊",
+            BlockchainCategory.Prescription => "📝",
+            BlockchainCategory.Procurement  => "🛒",
+            BlockchainCategory.UserMgmt     => "👤",
+            BlockchainCategory.HelpDesk     => "🎫",
+            _                               => "⚙"
+        };
+        bool validPow = block.Hash.StartsWith("000");
+        <div class="block-card" style="border-left: 3px solid @catColor;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
                 <div>
-                    <div class="block-index">Block #@block.BlockIndex</div>
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+                        <div class="block-index">Block #@block.BlockIndex</div>
+                        <span style="font-size:11px; padding:2px 9px; border-radius:10px; background:@(catColor)22; color:@catColor; border:1px solid @(catColor)44;">
+                            @catIcon @block.Category
+                        </span>
+                        @if (validPow)
+                        {
+                            <span style="font-size:10px; color:#22c55e; opacity:.7;">✓ PoW</span>
+                        }
+                        else
+                        {
+                            <span style="font-size:10px; color:#ef4444;">✗ Invalid</span>
+                        }
+                    </div>
                     <div class="block-action">@block.Action</div>
                     <div class="block-user">
                         @block.UserName
                         @if (!string.IsNullOrEmpty(block.Role))
                         {
-                            <span style="margin-left: 6px; opacity: 0.7;">(@block.Role)</span>
+                            <span style="margin-left: 6px; opacity: 0.6;">(@block.Role)</span>
                         }
                     </div>
                 </div>
                 <div style="text-align: right;">
                     <div class="block-meta">@block.Timestamp.ToLocalTime().ToString("dd MMM yyyy HH:mm:ss")</div>
                     <div class="block-meta" style="margin-top: 4px;">Nonce: @block.Nonce</div>
+                    @if (!string.IsNullOrEmpty(block.Signature))
+                    {
+                        <div style="font-size: 10px; color: rgba(255,255,255,0.25); margin-top: 3px;">
+                            sig: @block.Signature
+                        </div>
+                    }
                 </div>
             </div>
 
             <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08);">
                 <div style="font-size: 10px; color: rgba(255,255,255,0.3); margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.8px;">Block Hash</div>
-                <div class="block-hash">@block.Hash</div>
-                @if (!string.IsNullOrEmpty(block.PreviousHash))
+                <div class="block-hash">
+                    <span style="color:@catColor; font-weight:600;">@block.Hash[..3]</span>@block.Hash[3..]
+                </div>
+                @if (!string.IsNullOrEmpty(block.PreviousHash) && block.PreviousHash != "0")
                 {
-                    <div style="font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 6px; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.8px;">Previous Hash</div>
-                    <div class="block-hash" style="color: rgba(245,166,35,0.5);">@block.PreviousHash</div>
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 6px; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.8px;">← Previous Hash</div>
+                    <div class="block-hash" style="color: rgba(245,166,35,0.45);">@block.PreviousHash</div>
                 }
             </div>
 
@@ -58,7 +129,7 @@
             {
                 <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06);">
                     <div style="font-size: 10px; color: rgba(255,255,255,0.3); margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.8px;">Payload</div>
-                    <div style="font-family: 'Courier New', monospace; font-size: 10.5px; color: rgba(255,255,255,0.5); word-break: break-all;">@block.Data</div>
+                    <div style="font-family: 'Courier New', monospace; font-size: 10.5px; color: rgba(255,255,255,0.45); word-break: break-all;">@block.Data</div>
                 </div>
             }
         </div>
@@ -69,22 +140,13 @@
         int startPg = Math.Max(1, pg - 2);
         int endPg   = Math.Min(pages, pg + 2);
         <div class="pagination-bar" style="margin-top: 8px;">
-            @if (pg > 1)
-            {
-                <a asp-action="Blockchain" asp-route-pg="@(pg - 1)" class="page-btn">← Prev</a>
-            }
+            @if (pg > 1) { <a asp-action="Blockchain" asp-route-pg="@(pg - 1)" class="page-btn">← Prev</a> }
             @for (int n = startPg; n <= endPg; n++)
             {
-                <a asp-action="Blockchain" asp-route-pg="@n"
-                   class="page-btn @(n == pg ? "active" : "")">@n</a>
+                <a asp-action="Blockchain" asp-route-pg="@n" class="page-btn @(n == pg ? "active" : "")">@n</a>
             }
-            @if (pg < pages)
-            {
-                <a asp-action="Blockchain" asp-route-pg="@(pg + 1)" class="page-btn">Next →</a>
-            }
-            <span style="margin-left: 12px; font-size: 13px; color: var(--text-muted);">
-                Page @pg of @pages
-            </span>
+            @if (pg < pages) { <a asp-action="Blockchain" asp-route-pg="@(pg + 1)" class="page-btn">Next →</a> }
+            <span style="margin-left: 12px; font-size: 13px; color: var(--text-muted);">Page @pg of @pages</span>
         </div>
     }
 }

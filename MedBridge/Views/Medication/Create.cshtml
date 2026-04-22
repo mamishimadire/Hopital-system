@@ -1,0 +1,78 @@
+@model MedBridge.Models.Medication
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Add Medication";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Add Medication</h1>
+        <p class="page-subheading">New entry will be recorded on the blockchain</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline">← Back</a>
+</div>
+
+<div class="card" style="max-width: 720px;">
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Code <span style="color:var(--danger)">*</span></label>
+                    <input asp-for="Code" class="form-control" placeholder="MED001" />
+                    <span asp-validation-for="Code" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Name <span style="color:var(--danger)">*</span></label>
+                    <input asp-for="Name" class="form-control" placeholder="Amoxicillin 500mg" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Batch Number</label>
+                    <input asp-for="BatchNumber" class="form-control" placeholder="B2026001" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Expiry Date</label>
+                    <input asp-for="ExpiryDate" type="date" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Initial Stock <span style="color:var(--danger)">*</span></label>
+                    <input asp-for="Quantity" type="number" min="0" class="form-control" />
+                    <span asp-validation-for="Quantity" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Minimum Stock Level</label>
+                    <input asp-for="MinimumQuantity" type="number" min="1" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Unit</label>
+                    <select asp-for="Unit" class="form-control form-select">
+                        <option>tablets</option>
+                        <option>capsules</option>
+                        <option>ml</option>
+                        <option>inhalers</option>
+                        <option>vials</option>
+                        <option>ampoules</option>
+                        <option>patches</option>
+                        <option>suppositories</option>
+                        <option>units</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Unit Cost (R)</label>
+                    <input asp-for="UnitCost" type="number" min="0" step="0.01" class="form-control" />
+                </div>
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label class="form-label">Supplier</label>
+                    <select asp-for="SupplierId" asp-items="ViewBag.Suppliers" class="form-control form-select">
+                        <option value="">— Select Supplier —</option>
+                    </select>
+                </div>
+            </div>
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-primary">Save & Record on Blockchain</button>
+                <a asp-action="Index" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>

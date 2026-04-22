@@ -33,5 +33,11 @@ public class BlockchainBlock
 
     public int Nonce { get; set; } = 0;
 
+    [MaxLength(50)]
+    public string Category { get; set; } = "System";
+
+    [MaxLength(100)]
+    public string? Signature { get; set; }
+
     public bool IsValid { get; set; } = true;
 }
