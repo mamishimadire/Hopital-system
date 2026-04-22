@@ -36,6 +36,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     // Finance
     public DbSet<FinanceInboxItem> FinanceInboxItems { get; set; }
 
+    // Help Desk
+    public DbSet<HelpTicket> HelpTickets { get; set; }
+    public DbSet<TicketComment> TicketComments { get; set; }
+
     // Blockchain / Audit
     public DbSet<BlockchainBlock> BlockchainBlocks { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
@@ -93,6 +97,19 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<PatientNote>(e =>
         {
             e.HasOne(n => n.CreatedBy).WithMany().HasForeignKey(n => n.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<HelpTicket>(e =>
+        {
+            e.HasOne(t => t.RaisedBy).WithMany().HasForeignKey(t => t.RaisedByUserId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(t => t.AssignedTo).WithMany().HasForeignKey(t => t.AssignedToUserId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(t => t.ResolvedBy).WithMany().HasForeignKey(t => t.ResolvedByUserId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<TicketComment>(e =>
+        {
+            e.HasOne(c => c.Author).WithMany().HasForeignKey(c => c.AuthorUserId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(c => c.HelpTicket).WithMany(t => t.Comments).HasForeignKey(c => c.HelpTicketId).OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

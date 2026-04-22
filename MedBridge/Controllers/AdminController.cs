@@ -17,14 +17,19 @@ public class AdminController : Controller
     private readonly UserManager<ApplicationUser> _users;
     private readonly RoleManager<IdentityRole> _roles;
     private readonly IAuditService _audit;
+    private readonly IEmailService _email;
+    private readonly ITokenUrlService _tokenUrl;
 
     public AdminController(ApplicationDbContext db, UserManager<ApplicationUser> users,
-        RoleManager<IdentityRole> roles, IAuditService audit)
+        RoleManager<IdentityRole> roles, IAuditService audit,
+        IEmailService email, ITokenUrlService tokenUrl)
     {
-        _db = db;
-        _users = users;
-        _roles = roles;
-        _audit = audit;
+        _db       = db;
+        _users    = users;
+        _roles    = roles;
+        _audit    = audit;
+        _email    = email;
+        _tokenUrl = tokenUrl;
     }
 
     // ── Admin Home Dashboard
@@ -112,7 +117,8 @@ public class AdminController : Controller
             UserName = model.Email, Email = model.Email, FullName = model.FullName,
             EmailConfirmed = true, IsActive = true, ClientId = model.ClientId,
             JobTitle = model.JobTitle, Department = model.Department,
-            PhoneNumber = model.PhoneNumber, CreatedAt = DateTime.UtcNow
+            PhoneNumber = model.PhoneNumber, CreatedAt = DateTime.UtcNow,
+            MustChangePassword = true  // force password change on first login
         };
 
         var result = await _users.CreateAsync(user, model.Password);
@@ -120,7 +126,12 @@ public class AdminController : Controller
         {
             await _users.AddToRoleAsync(user, model.Role);
             await _audit.LogAsync($"Admin created user {model.Email} with role {model.Role}", "User", user.Id);
-            TempData["Success"] = $"User {model.FullName} created successfully.";
+
+            // Send welcome email with temporary password
+            try { await _email.SendWelcomeAsync(model.Email, model.FullName, model.Password); }
+            catch { /* email failure must not block user creation */ }
+
+            TempData["Success"] = $"User {model.FullName} created. A welcome email with login details has been sent to {model.Email}.";
             return RedirectToAction("Users");
         }
 
@@ -186,21 +197,27 @@ public class AdminController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> ResetPassword(string id, string newPassword)
+    public async Task<IActionResult> ResetPassword(string id)
     {
         var user = await _users.FindByIdAsync(id);
         if (user == null) return NotFound();
-        var token = await _users.GeneratePasswordResetTokenAsync(user);
-        var result = await _users.ResetPasswordAsync(user, token, newPassword);
-        if (result.Succeeded)
+
+        // Generate a reset link and email it to the user
+        var token     = await _users.GeneratePasswordResetTokenAsync(user);
+        var resetLink = _tokenUrl.BuildResetLink(user.Email!, token);
+        try
         {
-            await _audit.LogAsync($"Admin reset password for user {user.Email}", "User", id);
-            TempData["Success"] = "Password reset successfully.";
+            await _email.SendPasswordResetAsync(user.Email!, user.FullName, resetLink);
+            user.MustChangePassword = true;
+            await _users.UpdateAsync(user);
+            await _audit.LogAsync($"Admin sent password reset to {user.Email}", "User", id);
+            TempData["Success"] = $"Password reset link sent to {user.Email}.";
         }
-        else
+        catch
         {
-            TempData["Error"] = string.Join(", ", result.Errors.Select(e => e.Description));
+            TempData["Error"] = "Failed to send reset email. Check email settings.";
         }
+
         return RedirectToAction("Users");
     }
 
@@ -325,7 +342,7 @@ public class AdminController : Controller
                 UserName = portalEmail, Email = portalEmail,
                 FullName = model.ContactPersonName, EmailConfirmed = true,
                 IsActive = true, JobTitle = "Supplier Contact",
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow, MustChangePassword = true
             };
             var tempPassword = $"Supplier@{count:D3}!";
             var result = await _users.CreateAsync(portalUser, tempPassword);
@@ -334,7 +351,9 @@ public class AdminController : Controller
                 await _users.AddToRoleAsync(portalUser, "Supplier");
                 supplier.PortalUserId = portalUser.Id;
                 await _db.SaveChangesAsync();
-                TempData["PortalCredentials"] = $"Supplier portal user created. Email: {portalEmail} | Temp password: {tempPassword}";
+                try { await _email.SendWelcomeAsync(portalEmail, model.ContactPersonName, tempPassword); }
+                catch { /* do not block */ }
+                TempData["PortalCredentials"] = $"Supplier portal account created for {model.ContactPersonName}. Login: {portalEmail}";
             }
         }
 

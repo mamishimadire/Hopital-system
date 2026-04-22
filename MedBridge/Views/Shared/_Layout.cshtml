@@ -30,6 +30,12 @@
                         <span class="nav-icon">▦</span> Dashboard
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "HelpDesk" ? "active" : "")"
+                       asp-controller="HelpDesk" asp-action="Index">
+                        <span class="nav-icon">🎫</span> Help Desk
+                    </a>
+                </li>
 
                 @if (User.IsInRole("Admin"))
                 {

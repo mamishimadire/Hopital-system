@@ -13,4 +13,6 @@ public class ApplicationUser : IdentityUser
     public string? JobTitle { get; set; }
     public string? Department { get; set; }
     public string? ProfilePicture { get; set; }
+    public DateTime? PasswordChangedAt { get; set; }
+    public bool MustChangePassword { get; set; } = false;
 }

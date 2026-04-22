@@ -716,17 +716,113 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 .mb-0 { margin-bottom: 0; }
 .me-2 { margin-right: 8px; }
 
-/* ---- Responsive ---- */
+/* ======================================================
+   RESPONSIVE — TV · Desktop · Tablet · Mobile
+   ====================================================== */
+
+/* ── TV / Large screens (≥ 1600 px) ───────────────── */
+@media (min-width: 1600px) {
+  :root { --sidebar-width: 280px; }
+  body { font-size: 15px; }
+  .content-area { padding: 32px 40px; }
+  .stat-value { font-size: 34px; }
+  .stats-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  .data-table thead th,
+  .data-table tbody td { padding: 14px 18px; }
+  .page-heading { font-size: 26px; }
+  .card-body { padding: 24px; }
+}
+
+/* ── 4K / Ultra-wide (≥ 2400 px) ──────────────────── */
+@media (min-width: 2400px) {
+  :root { --sidebar-width: 320px; }
+  body { font-size: 16px; }
+  .content-area { padding: 48px; }
+  .stat-value { font-size: 42px; }
+  .login-card { max-width: 540px; padding: 64px 56px; }
+  .login-brand { font-size: 36px; }
+}
+
+/* ── Tablet / Small laptop (< 900 px) ─────────────── */
 @media (max-width: 900px) {
   .sidebar { transform: translateX(-100%); }
   .sidebar.open { transform: translateX(0); }
   .main-content { margin-left: 0; }
   .sidebar-toggle { display: block; }
+  .top-bar { padding: 0 16px; gap: 10px; }
+  .content-area { padding: 20px 16px; }
+  .user-name { max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 
+/* ── Small tablet (< 768 px) ──────────────────────── */
+@media (max-width: 768px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .form-row-3 { grid-template-columns: 1fr 1fr; }
+  .page-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .page-header > .btn { align-self: flex-start; }
+  .detail-key { flex: 0 0 140px; font-size: 12px; }
+  /* Two-column content / sidebar layouts collapse to single column */
+  .responsive-grid { grid-template-columns: 1fr !important; }
+}
+
+/* ── Mobile phone (< 640 px) ──────────────────────── */
 @media (max-width: 640px) {
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .content-area { padding: 12px; }
+  .page-heading { font-size: 18px; }
+  .page-subheading { font-size: 12px; }
+
+  /* Stat cards — 2 per row */
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stat-card { padding: 14px 16px; }
+  .stat-value { font-size: 26px; }
+  .stat-label { font-size: 10.5px; }
+
+  /* Forms — single column */
   .form-grid, .form-grid-2, .form-row, .form-row-3 { grid-template-columns: 1fr; }
-  .content-area { padding: 16px; }
+
+  /* Cards */
+  .card-body { padding: 14px; }
+  .card-header { padding: 11px 14px; flex-wrap: wrap; gap: 8px; }
+
+  /* Top bar */
+  .top-bar { padding: 0 12px; }
+  .page-title { font-size: 14px; }
+  .user-name { display: none; }
+
+  /* Tables — horizontal scroll */
+  .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .data-table thead th,
+  .data-table tbody td { padding: 9px 10px; font-size: 12px; }
+
+  /* Detail rows — stacked */
+  .detail-row { flex-direction: column; gap: 2px; padding: 10px 0; }
+  .detail-key { flex: none; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .detail-value { font-size: 13px; }
+
+  /* Login page */
+  .login-card { padding: 32px 24px; margin: 12px; border-radius: 16px; max-width: calc(100% - 24px); }
+  .login-brand { font-size: 24px; }
+  .login-title { font-size: 20px; }
+
+  /* Filter bar */
+  .filter-bar { gap: 8px; }
+  .search-box input { min-width: 130px; }
+  .filter-bar .form-select { min-width: 110px !important; }
+
+  /* Page header & pagination */
   .page-header { flex-direction: column; align-items: flex-start; }
+  .pagination-bar { flex-wrap: wrap; }
+}
+
+/* ── Extra-small phone (< 400 px) ─────────────────── */
+@media (max-width: 400px) {
+  .content-area { padding: 10px; }
+  .login-card { padding: 28px 18px; margin: 8px; border-radius: 14px; }
+  .login-brand { font-size: 22px; }
+  .login-title { font-size: 18px; }
+  .stats-grid { gap: 8px; }
+  .stat-value { font-size: 22px; }
+  .role-badge { font-size: 9px; padding: 2px 7px; }
+  .card-body { padding: 12px; }
+  .search-box input { min-width: 100px; font-size: 13px; }
 }

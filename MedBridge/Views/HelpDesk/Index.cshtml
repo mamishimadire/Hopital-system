@@ -1,0 +1,152 @@
+@using MedBridge.Models
+@model IEnumerable<HelpTicket>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Help Desk";
+    bool isAdmin = ViewBag.IsAdmin == true;
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Help Desk</h1>
+        <p class="page-subheading">@(isAdmin ? "All support tickets" : "My support tickets")</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">+ Raise Ticket</a>
+</div>
+
+<!-- Stats (admin only) -->
+@if (isAdmin)
+{
+    var open       = Model.Count(t => t.Status == TicketStatus.Open);
+    var inProgress = Model.Count(t => t.Status == TicketStatus.InProgress);
+    var resolved   = Model.Count(t => t.Status == TicketStatus.Resolved);
+    var critical   = Model.Count(t => t.Priority == TicketPriority.Critical && t.Status != TicketStatus.Closed);
+    <div class="stats-grid" style="margin-bottom: 20px;">
+        <div class="stat-card">
+            <div class="stat-label">Open</div>
+            <div class="stat-value warning">@open</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">In Progress</div>
+            <div class="stat-value info">@inProgress</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Resolved</div>
+            <div class="stat-value success">@resolved</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Critical</div>
+            <div class="stat-value danger">@critical</div>
+        </div>
+    </div>
+}
+
+<!-- Filters -->
+<form method="get" asp-action="Index">
+    <div class="filter-bar">
+        <div class="search-box">
+            <input type="text" name="search" value="@ViewBag.Search" placeholder="Search ticket or ref…" />
+            <button type="submit">🔍</button>
+        </div>
+        <select name="status" class="form-control form-select filter-select" style="width: auto; min-width: 140px;">
+            <option value="">All Status</option>
+            @foreach (var s in Enum.GetNames<TicketStatus>())
+            {
+                <option value="@s" selected="@(ViewBag.Status == s ? "selected" : null)">@s</option>
+            }
+        </select>
+        <select name="priority" class="form-control form-select filter-select" style="width: auto; min-width: 130px;">
+            <option value="">All Priority</option>
+            @foreach (var p in Enum.GetNames<TicketPriority>())
+            {
+                <option value="@p" selected="@(ViewBag.Priority == p ? "selected" : null)">@p</option>
+            }
+        </select>
+        @if (!string.IsNullOrEmpty(ViewBag.Search as string) || !string.IsNullOrEmpty(ViewBag.Status as string))
+        {
+            <a asp-action="Index" class="btn btn-outline btn-sm">Clear</a>
+        }
+    </div>
+</form>
+
+<div class="card">
+    @if (Model.Any())
+    {
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Ref</th>
+                        <th>Subject</th>
+                        <th>Category</th>
+                        <th>Priority</th>
+                        @if (isAdmin) { <th>Raised By</th> }
+                        <th>Assigned</th>
+                        <th>Raised</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model)
+                    {
+                        <tr>
+                            <td class="text-mono" style="font-weight: 600; color: var(--amber-dark);">@t.TicketRef</td>
+                            <td>
+                                <div style="font-weight: 500; font-size: 13px;">@t.Subject</div>
+                                <div style="font-size: 11px; color: var(--text-muted);">@t.Description.Substring(0, Math.Min(60, t.Description.Length))…</div>
+                            </td>
+                            <td style="font-size: 12px;">@t.Category</td>
+                            <td>
+                                @{
+                                    var priCls = t.Priority switch {
+                                        TicketPriority.Critical => "badge-out",
+                                        TicketPriority.High     => "badge-pending",
+                                        TicketPriority.Medium   => "badge-low",
+                                        _                       => "badge-normal"
+                                    };
+                                }
+                                <span class="badge @priCls">@t.Priority</span>
+                            </td>
+                            @if (isAdmin)
+                            {
+                                <td style="font-size: 13px;">@t.RaisedBy?.FullName</td>
+                            }
+                            <td style="font-size: 12px; color: var(--text-muted);">
+                                @(t.AssignedTo?.FullName ?? "—")
+                            </td>
+                            <td style="font-size: 12px; color: var(--text-muted); white-space: nowrap;">
+                                @t.RaisedAt.ToLocalTime().ToString("dd MMM yy HH:mm")
+                            </td>
+                            <td>
+                                @{
+                                    var stsCls = t.Status switch {
+                                        TicketStatus.Open       => "badge-pending",
+                                        TicketStatus.InProgress => "badge-dispensed",
+                                        TicketStatus.Resolved   => "badge-approved",
+                                        TicketStatus.Closed     => "badge-inactive",
+                                        _                       => ""
+                                    };
+                                }
+                                <span class="badge @stsCls">@t.Status</span>
+                            </td>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@t.Id" class="btn btn-sm btn-outline">View</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">🎫</div>
+            <div class="empty-state-title">No tickets found</div>
+            <div class="empty-state-text">
+                @(isAdmin ? "No support tickets in the system yet." : "You haven't raised any support tickets yet.")
+            </div>
+        </div>
+    }
+</div>

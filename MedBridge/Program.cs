@@ -24,6 +24,8 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.Password.RequiredLength = 8;
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     options.Lockout.MaxFailedAccessAttempts = 5;
+    // Token lifespan for password reset links = 24 hours
+    options.Tokens.PasswordResetTokenProvider = TokenOptions.DefaultProvider;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
@@ -31,6 +33,9 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 // ── Application services
 builder.Services.AddScoped<IBlockchainService, BlockchainService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddSingleton<ITokenUrlService, TokenUrlService>();
+builder.Services.AddHostedService<PasswordExpiryService>();
 builder.Services.AddHttpContextAccessor();
 
 // ── MVC

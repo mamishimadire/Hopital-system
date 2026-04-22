@@ -1,0 +1,217 @@
+@using MedBridge.Models
+@model HelpTicket
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = $"Ticket {Model.TicketRef}";
+    bool isAdmin = ViewBag.IsAdmin == true;
+    var agentList = ViewBag.AgentList as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? new();
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">@Model.TicketRef</h1>
+        <p class="page-subheading">@Model.Subject</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline">← All Tickets</a>
+</div>
+
+<div class="responsive-grid" style="display: grid; grid-template-columns: 1fr 300px; gap: 20px; align-items: start;">
+    <!-- Main content -->
+    <div>
+        <!-- Ticket body -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Description</span>
+                @{
+                    var stsCls = Model.Status switch {
+                        TicketStatus.Open       => "badge-pending",
+                        TicketStatus.InProgress => "badge-dispensed",
+                        TicketStatus.Resolved   => "badge-approved",
+                        TicketStatus.Closed     => "badge-inactive",
+                        _                       => ""
+                    };
+                }
+                <span class="badge @stsCls">@Model.Status</span>
+            </div>
+            <div class="card-body">
+                <p style="font-size: 14px; line-height: 1.7; white-space: pre-wrap;">@Model.Description</p>
+            </div>
+            <div class="card-footer" style="font-size: 12px; color: var(--text-muted);">
+                Raised by <strong>@Model.RaisedBy?.FullName</strong> on @Model.RaisedAt.ToLocalTime().ToString("dd MMMM yyyy HH:mm")
+            </div>
+        </div>
+
+        <!-- Resolution (if resolved) -->
+        @if (!string.IsNullOrEmpty(Model.Resolution))
+        {
+            <div class="card" style="border-left: 4px solid var(--success);">
+                <div class="card-header">
+                    <span class="card-title" style="color: var(--success);">✓ Resolution</span>
+                    <span style="font-size: 12px; color: var(--text-muted);">@Model.ResolvedAt?.ToLocalTime().ToString("dd MMM yyyy HH:mm")</span>
+                </div>
+                <div class="card-body">
+                    <p style="font-size: 14px; line-height: 1.7; white-space: pre-wrap;">@Model.Resolution</p>
+                </div>
+            </div>
+        }
+
+        <!-- Comments -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Comments (@Model.Comments.Count(c => !c.IsInternal || isAdmin))</span>
+            </div>
+            @{
+                var visibleComments = isAdmin
+                    ? Model.Comments.OrderBy(c => c.CreatedAt)
+                    : Model.Comments.Where(c => !c.IsInternal).OrderBy(c => c.CreatedAt);
+            }
+            @foreach (var comment in visibleComments)
+            {
+                <div style="padding: 16px 20px; border-bottom: 1px solid var(--border);">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="font-weight: 600; font-size: 13px;">@comment.Author?.FullName</span>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            @if (comment.IsInternal)
+                            {
+                                <span class="badge badge-pending" style="font-size: 10px;">Internal</span>
+                            }
+                            <span style="font-size: 12px; color: var(--text-muted);">
+                                @comment.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")
+                            </span>
+                        </div>
+                    </div>
+                    <p style="font-size: 13.5px; line-height: 1.6; white-space: pre-wrap; margin: 0;">@comment.Body</p>
+                </div>
+            }
+
+            @if (!visibleComments.Any())
+            {
+                <div style="padding: 24px 20px; text-align: center; color: var(--text-muted); font-size: 13px;">
+                    No comments yet.
+                </div>
+            }
+
+            <!-- Add comment form -->
+            @if (Model.Status != TicketStatus.Closed)
+            {
+                <div style="padding: 16px 20px; border-top: 1px solid var(--border); background: var(--surface-alt);">
+                    <form asp-action="AddComment" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="ticketId" value="@Model.Id" />
+                        <div class="form-group">
+                            <label class="form-label">Add Comment</label>
+                            <textarea class="form-control" name="body" rows="3"
+                                      placeholder="Write your comment…"></textarea>
+                        </div>
+                        @if (isAdmin)
+                        {
+                            <div class="form-check" style="margin-bottom: 10px;">
+                                <input class="form-check-input" type="checkbox" name="isInternal" id="isInternal" value="true" />
+                                <label class="form-check-label" for="isInternal">Internal note (not visible to ticket raiser)</label>
+                            </div>
+                        }
+                        <button type="submit" class="btn btn-primary btn-sm">Post Comment</button>
+                    </form>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Sidebar details -->
+    <div>
+        <div class="card">
+            <div class="card-header"><span class="card-title">Ticket Details</span></div>
+            <div class="card-body" style="padding: 0;">
+                <div class="detail-row">
+                    <div class="detail-key">Reference</div>
+                    <div class="detail-value text-mono fw-600" style="color: var(--amber-dark);">@Model.TicketRef</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-key">Status</div>
+                    <div class="detail-value"><span class="badge @stsCls">@Model.Status</span></div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-key">Priority</div>
+                    <div class="detail-value">
+                        @{
+                            var priCls = Model.Priority switch {
+                                TicketPriority.Critical => "badge-out",
+                                TicketPriority.High     => "badge-pending",
+                                TicketPriority.Medium   => "badge-low",
+                                _                       => "badge-normal"
+                            };
+                        }
+                        <span class="badge @priCls">@Model.Priority</span>
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-key">Category</div>
+                    <div class="detail-value" style="font-size: 13px;">@Model.Category</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-key">Raised by</div>
+                    <div class="detail-value" style="font-size: 13px;">@Model.RaisedBy?.FullName</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-key">Assigned to</div>
+                    <div class="detail-value" style="font-size: 13px;">@(Model.AssignedTo?.FullName ?? "Unassigned")</div>
+                </div>
+                @if (Model.ResolvedAt.HasValue)
+                {
+                    <div class="detail-row">
+                        <div class="detail-key">Resolved</div>
+                        <div class="detail-value" style="font-size: 12px;">@Model.ResolvedAt.Value.ToLocalTime().ToString("dd MMM yyyy")</div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Admin controls -->
+        @if (isAdmin && Model.Status != TicketStatus.Closed)
+        {
+            <div class="card">
+                <div class="card-header"><span class="card-title">Admin Actions</span></div>
+                <div class="card-body">
+                    <form asp-action="UpdateStatus" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+
+                        <div class="form-group">
+                            <label class="form-label">Status</label>
+                            <select class="form-control form-select" name="status">
+                                @foreach (var s in Enum.GetValues<TicketStatus>())
+                                {
+                                    <option value="@s" selected="@(Model.Status == s ? "selected" : null)">@s</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Assign To</label>
+                            <select class="form-control form-select" name="assignedToUserId">
+                                <option value="">— Unassigned —</option>
+                                @foreach (var agent in agentList)
+                                {
+                                    <option value="@agent.Value"
+                                            selected="@(Model.AssignedToUserId == agent.Value ? "selected" : null)">
+                                        @agent.Text
+                                    </option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Resolution (if resolving)</label>
+                            <textarea class="form-control" name="resolution" rows="3"
+                                      placeholder="Describe how the issue was resolved…">@Model.Resolution</textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">
+                            Update Ticket
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+</div>
