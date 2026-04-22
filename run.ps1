@@ -3,7 +3,6 @@
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $AppDir    = Join-Path $ScriptDir "MedBridge"
-$DbFile    = Join-Path $AppDir "medbridge.db"
 $Url       = "http://localhost:5000"
 
 Write-Host ""
@@ -23,9 +22,9 @@ try {
     exit 1
 }
 
-# Use SQLite — no database server needed
-$env:ConnectionStrings__DefaultConnection = "Data Source=$DbFile"
-Write-Host "  Database : $DbFile" -ForegroundColor Green
+# Use SQL Server LocalDB — change this connection string when you get the company database
+$env:ConnectionStrings__DefaultConnection = "Server=(localdb)\MSSQLLocalDB;Database=MedBridgeEMR;Trusted_Connection=True;TrustServerCertificate=True"
+Write-Host "  Database : SQL Server LocalDB (MedBridgeEMR)" -ForegroundColor Green
 Write-Host "  URL      : $Url" -ForegroundColor Green
 Write-Host ""
 Write-Host "Starting app... (first run takes 30-60 seconds to compile)" -ForegroundColor Yellow

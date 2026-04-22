@@ -14,10 +14,12 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    if (connectionString.StartsWith("Host=") || connectionString.StartsWith("Server=localhost;Port="))
+    if (connectionString.StartsWith("Host="))
         options.UseNpgsql(connectionString);
-    else
+    else if (connectionString.StartsWith("Data Source=") || connectionString.EndsWith(".db"))
         options.UseSqlite(connectionString);
+    else
+        options.UseSqlServer(connectionString); // SQL Server / LocalDB
 });
 
 // ── Identity
