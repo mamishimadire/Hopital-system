@@ -4,6 +4,8 @@ using MedBridge.Data;
 using MedBridge.Models;
 using MedBridge.Services;
 
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 // ── Database
@@ -11,7 +13,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseNpgsql(connectionString));
 
 // ── Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
