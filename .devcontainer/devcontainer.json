@@ -1,0 +1,19 @@
+{
+  "name": "MedBridge EMR",
+  "image": "mcr.microsoft.com/devcontainers/dotnet:8.0",
+  "features": {
+    "ghcr.io/devcontainers/features/postgresql:1": {}
+  },
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "forwardPorts": [5000],
+  "portsAttributes": {
+    "5000": {
+      "label": "MedBridge EMR",
+      "onAutoForward": "openBrowser",
+      "protocol": "http"
+    }
+  },
+  "remoteEnv": {
+    "ASPNETCORE_ENVIRONMENT": "Development"
+  }
+}
