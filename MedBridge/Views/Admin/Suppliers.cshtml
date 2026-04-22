@@ -1,0 +1,132 @@
+@using MedBridge.ViewModels.Admin
+@using MedBridge.Models
+@model IEnumerable<SupplierListViewModel>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Suppliers";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Suppliers</h1>
+        <p class="page-subheading">Manage pharmaceutical suppliers and approvals</p>
+    </div>
+    <a asp-action="CreateSupplier" class="btn btn-primary">+ Add Supplier</a>
+</div>
+
+<!-- Filters -->
+<form method="get" asp-action="Suppliers">
+    <div class="filter-bar">
+        <div class="search-box">
+            <input type="text" name="search" value="@ViewBag.Search" placeholder="Search suppliers…" />
+            <button type="submit">🔍</button>
+        </div>
+        <select name="status" class="form-control form-select filter-select" style="width: auto; min-width: 160px;">
+            <option value="">All Approval Status</option>
+            <option value="Pending"  selected="@(ViewBag.StatusFilter == "Pending"  ? "selected" : null)">Pending</option>
+            <option value="Approved" selected="@(ViewBag.StatusFilter == "Approved" ? "selected" : null)">Approved</option>
+            <option value="Rejected" selected="@(ViewBag.StatusFilter == "Rejected" ? "selected" : null)">Rejected</option>
+        </select>
+        @if (!string.IsNullOrEmpty(ViewBag.Search as string) || !string.IsNullOrEmpty(ViewBag.StatusFilter as string))
+        {
+            <a asp-action="Suppliers" class="btn btn-outline btn-sm">Clear</a>
+        }
+    </div>
+</form>
+
+<div class="card">
+    <div class="card-header">
+        <span class="card-title">@Model.Count() suppliers</span>
+    </div>
+    @if (Model.Any())
+    {
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Supplier</th>
+                        <th>Code</th>
+                        <th>Contact Person</th>
+                        <th>Bank</th>
+                        <th>Payment</th>
+                        <th>Approval</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div style="font-weight: 500;">@s.Name</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">@s.ContactEmail</div>
+                            </td>
+                            <td class="text-mono">@s.SupplierCode</td>
+                            <td style="font-size: 13px;">@(s.ContactPersonName ?? "—")</td>
+                            <td style="font-size: 12px; color: var(--text-muted);">@(s.BankName ?? "—")</td>
+                            <td style="font-size: 12px;">@s.PaymentTerms</td>
+                            <td>
+                                @switch (s.ApprovalStatus)
+                                {
+                                    case SupplierApprovalStatus.Pending:
+                                        <span class="badge badge-pending">Pending</span>
+                                        break;
+                                    case SupplierApprovalStatus.Approved:
+                                        <span class="badge badge-approved">Approved</span>
+                                        break;
+                                    case SupplierApprovalStatus.Rejected:
+                                        <span class="badge badge-rejected">Rejected</span>
+                                        break;
+                                }
+                            </td>
+                            <td>
+                                @if (s.Status == SupplierStatus.Active)
+                                {
+                                    <span class="badge badge-active">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-inactive">Inactive</span>
+                                }
+                            </td>
+                            <td class="actions">
+                                <div style="display: flex; gap: 6px;">
+                                    @if (s.ApprovalStatus == SupplierApprovalStatus.Pending)
+                                    {
+                                        <form asp-action="ApproveSupplier" asp-route-id="@s.Id"
+                                              method="post" style="display:inline;">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-success"
+                                                    data-confirm="Approve @s.Name as a supplier?">
+                                                ✓ Approve
+                                            </button>
+                                        </form>
+                                    }
+                                    <form asp-action="ToggleSupplierStatus" asp-route-id="@s.Id"
+                                          method="post" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit"
+                                                class="btn-icon @(s.Status == SupplierStatus.Active ? "danger" : "")"
+                                                title="@(s.Status == SupplierStatus.Active ? "Deactivate" : "Activate")"
+                                                data-confirm="@(s.Status == SupplierStatus.Active ? "Deactivate this supplier?" : "Activate this supplier?")">
+                                            @(s.Status == SupplierStatus.Active ? "🚫" : "✅")
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">🏭</div>
+            <div class="empty-state-title">No suppliers found</div>
+            <div class="empty-state-text">Add pharmaceutical suppliers to enable procurement.</div>
+        </div>
+    }
+</div>

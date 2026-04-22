@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - MedBridge</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;450;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <div class="app-wrapper">
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <span class="brand-icon">⊕</span>
+                    <span class="brand-text">MedBridge</span>
+                </div>
+                <div class="brand-sub">EMR &amp; Procurement</div>
+            </div>
+
+            <ul class="sidebar-nav">
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : "")"
+                       asp-controller="Dashboard" asp-action="Index">
+                        <span class="nav-icon">▦</span> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "HelpDesk" ? "active" : "")"
+                       asp-controller="HelpDesk" asp-action="Index">
+                        <span class="nav-icon">🎫</span> Help Desk
+                    </a>
+                </li>
+
+                @if (User.IsInRole("Admin"))
+                {
+                    <li class="nav-section">Administration</li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Users" ? "active" : "")"
+                           asp-controller="Admin" asp-action="Users">
+                            <span class="nav-icon">👥</span> Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Clients" ? "active" : "")"
+                           asp-controller="Admin" asp-action="Clients">
+                            <span class="nav-icon">🏥</span> Clients
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Suppliers" ? "active" : "")"
+                           asp-controller="Admin" asp-action="Suppliers">
+                            <span class="nav-icon">🏭</span> Suppliers
+                        </a>
+                    </li>
+                    <li class="nav-section">Audit</li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "AuditTrail" ? "active" : "")"
+                           asp-controller="Admin" asp-action="AuditTrail">
+                            <span class="nav-icon">📋</span> Audit Trail
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Blockchain" ? "active" : "")"
+                           asp-controller="Admin" asp-action="Blockchain">
+                            <span class="nav-icon">🔗</span> Blockchain
+                        </a>
+                    </li>
+                }
+
+                @if (User.IsInRole("Doctor") || User.IsInRole("Nurse") || User.IsInRole("Pharmacist") || User.IsInRole("PracticeAdmin"))
+                {
+                    <li class="nav-section">Clinical</li>
+                }
+                @if (User.IsInRole("Doctor") || User.IsInRole("PracticeAdmin") || User.IsInRole("Nurse"))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Patient" ? "active" : "")"
+                           asp-controller="Patient" asp-action="Index">
+                            <span class="nav-icon">👤</span> Patients
+                        </a>
+                    </li>
+                }
+                @if (User.IsInRole("Doctor"))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Prescription" ? "active" : "")"
+                           asp-controller="Prescription" asp-action="Index">
+                            <span class="nav-icon">📝</span> Prescriptions
+                        </a>
+                    </li>
+                }
+                @if (User.IsInRole("Pharmacist") || User.IsInRole("Nurse"))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Dispense" asp-action="Queue">
+                            <span class="nav-icon">💊</span> Dispense Queue
+                        </a>
+                    </li>
+                }
+
+                @if (User.IsInRole("Pharmacist") || User.IsInRole("ProcurementOfficer") || User.IsInRole("HeadOfProcurement") || User.IsInRole("HeadOfSupplyChain"))
+                {
+                    <li class="nav-section">Inventory</li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Medication" ? "active" : "")"
+                           asp-controller="Medication" asp-action="Index">
+                            <span class="nav-icon">💊</span> Medications
+                        </a>
+                    </li>
+                }
+
+                @if (User.IsInRole("ProcurementOfficer") || User.IsInRole("HeadOfProcurement") || User.IsInRole("HeadOfSupplyChain"))
+                {
+                    <li class="nav-section">Procurement</li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Requisitions" ? "active" : "")"
+                           asp-controller="Procurement" asp-action="Requisitions">
+                            <span class="nav-icon">📋</span> Requisitions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Orders" ? "active" : "")"
+                           asp-controller="Procurement" asp-action="Orders">
+                            <span class="nav-icon">🛒</span> Purchase Orders
+                        </a>
+                    </li>
+                }
+
+                @if (User.IsInRole("ReceivingClerk") || User.IsInRole("HeadOfSupplyChain"))
+                {
+                    <li class="nav-section">Receiving</li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Receiving" ? "active" : "")"
+                           asp-controller="Receiving" asp-action="Index">
+                            <span class="nav-icon">📦</span> Receive Goods
+                        </a>
+                    </li>
+                }
+
+                @if (User.IsInRole("FinanceManager"))
+                {
+                    <li class="nav-section">Finance</li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Inbox" ? "active" : "")"
+                           asp-controller="Finance" asp-action="Inbox">
+                            <span class="nav-icon">📨</span> Finance Inbox
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Payments" ? "active" : "")"
+                           asp-controller="Finance" asp-action="Payments">
+                            <span class="nav-icon">💳</span> Payments
+                        </a>
+                    </li>
+                }
+
+                @if (User.IsInRole("Supplier"))
+                {
+                    <li class="nav-section">Supplier Portal</li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" && ViewContext.RouteData.Values["controller"]?.ToString() == "SupplierPortal" ? "active" : "")"
+                           asp-controller="SupplierPortal" asp-action="Index">
+                            <span class="nav-icon">📋</span> My Orders
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Invoices" ? "active" : "")"
+                           asp-controller="SupplierPortal" asp-action="Invoices">
+                            <span class="nav-icon">🧾</span> Invoices
+                        </a>
+                    </li>
+                }
+
+                @if (User.IsInRole("Auditor"))
+                {
+                    <li class="nav-section">Audit</li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Audit" ? "active" : "")"
+                           asp-controller="Audit" asp-action="Index">
+                            <span class="nav-icon">🔍</span> Audit Dashboard
+                        </a>
+                    </li>
+                }
+            </ul>
+
+            <div class="sidebar-footer">
+                <form asp-controller="Account" asp-action="Logout" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="logout-btn">
+                        <span>⏻</span> Logout
+                    </button>
+                </form>
+            </div>
+        </nav>
+
+        <div class="main-content">
+            <header class="top-bar">
+                <button class="sidebar-toggle" id="sidebarToggle" type="button">☰</button>
+                <div class="page-title">@(ViewData["Title"] ?? "MedBridge")</div>
+                <div class="top-bar-right">
+                    @{
+                        var allRoles = new[] { "Admin","Doctor","Nurse","Pharmacist","ProcurementOfficer","HeadOfProcurement","HeadOfSupplyChain","FinanceManager","ReceivingClerk","Auditor","Supplier","PracticeAdmin" };
+                        var currentRole = allRoles.FirstOrDefault(r => User.IsInRole(r)) ?? "User";
+                        var displayName = ViewBag.UserName as string ?? User.Identity?.Name ?? "";
+                    }
+                    <span class="role-badge role-@currentRole.ToLower()">@currentRole</span>
+                    <span class="user-name">@displayName</span>
+                </div>
+            </header>
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert-banner alert-success">✓ @TempData["Success"]</div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert-banner alert-danger">✕ @TempData["Error"]</div>
+            }
+
+            <div class="content-area">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+}
+else
+{
+    @RenderBody()
+}
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

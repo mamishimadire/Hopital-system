@@ -1,0 +1,81 @@
+@using MedBridge.ViewModels.Admin
+@model EditUserViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Edit User";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Edit User</h1>
+        <p class="page-subheading">Update user information and access</p>
+    </div>
+    <a asp-action="Users" class="btn btn-outline">← Back to Users</a>
+</div>
+
+<div class="card" style="max-width: 720px;">
+    <div class="card-body">
+        <form asp-action="EditUser" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+            <div class="form-section-title">Personal Information</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label" asp-for="FullName">Full Name <span class="required">*</span></label>
+                    <input class="form-control" asp-for="FullName" />
+                    <span asp-validation-for="FullName" class="field-validation-error"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input class="form-control" value="@Model.Email" readonly style="background: var(--surface-alt); cursor: not-allowed;" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label" asp-for="JobTitle">Job Title</label>
+                    <input class="form-control" asp-for="JobTitle" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label" asp-for="Department">Department</label>
+                    <input class="form-control" asp-for="Department" />
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-section-title">Role &amp; Access</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" asp-for="Role">Role <span class="required">*</span></label>
+                        <select class="form-control form-select" asp-for="Role">
+                            @foreach (var r in new[] { "Doctor","Nurse","Pharmacist","PracticeAdmin","ProcurementOfficer","HeadOfProcurement","HeadOfSupplyChain","FinanceManager","ReceivingClerk","Auditor" })
+                            {
+                                <option value="@r" selected="@(Model.Role == r ? "selected" : null)">@r</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Role" class="field-validation-error"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" asp-for="ClientId">Client (Organisation)</label>
+                        <select class="form-control form-select" asp-for="ClientId"
+                                asp-items="@(ViewBag.Clients as IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)">
+                            <option value="">— None / System User —</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" asp-for="IsActive" type="checkbox" />
+                    <label class="form-check-label" asp-for="IsActive">Account is active</label>
+                </div>
+            </div>
+
+            <div style="margin-top: 24px; display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a asp-action="Users" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

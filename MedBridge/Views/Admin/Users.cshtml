@@ -1,0 +1,121 @@
+@using MedBridge.ViewModels.Admin
+@model IEnumerable<UserListViewModel>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Users";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Users</h1>
+        <p class="page-subheading">Manage system users and access</p>
+    </div>
+    <a asp-action="CreateUser" class="btn btn-primary">+ Add User</a>
+</div>
+
+<!-- Filters -->
+<form method="get" asp-action="Users">
+    <div class="filter-bar">
+        <div class="search-box">
+            <input type="text" name="search" value="@ViewBag.Search" placeholder="Search name or email…" />
+            <button type="submit">🔍</button>
+        </div>
+        <select name="role" class="form-control form-select filter-select"
+                style="width: auto; min-width: 160px;">
+            <option value="">All Roles</option>
+            @foreach (var r in new[] { "Admin","Doctor","Nurse","Pharmacist","PracticeAdmin","ProcurementOfficer","HeadOfProcurement","HeadOfSupplyChain","FinanceManager","ReceivingClerk","Auditor","Supplier" })
+            {
+                <option value="@r" selected="@(ViewBag.SelectedRole == r ? "selected" : null)">@r</option>
+            }
+        </select>
+        <select name="active" class="form-control form-select filter-select" style="width: auto;">
+            <option value="">All Status</option>
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+        </select>
+        @if (!string.IsNullOrEmpty(ViewBag.Search as string) || !string.IsNullOrEmpty(ViewBag.SelectedRole as string))
+        {
+            <a asp-action="Users" class="btn btn-outline btn-sm">Clear</a>
+        }
+    </div>
+</form>
+
+<div class="card">
+    <div class="card-header">
+        <span class="card-title">@Model.Count() users found</span>
+    </div>
+    @if (Model.Any())
+    {
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Client</th>
+                        <th>Last Login</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var u in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div style="font-weight: 500;">@u.FullName</div>
+                                @if (!string.IsNullOrEmpty(u.JobTitle))
+                                {
+                                    <div style="font-size: 12px; color: var(--text-muted);">@u.JobTitle</div>
+                                }
+                            </td>
+                            <td style="font-size: 13px;">@u.Email</td>
+                            <td><span class="role-badge role-@u.Role.ToLower()">@u.Role</span></td>
+                            <td style="font-size: 13px; color: var(--text-muted);">@(u.ClientName ?? "—")</td>
+                            <td style="font-size: 12px; color: var(--text-muted);">
+                                @(u.LastLogin.HasValue ? u.LastLogin.Value.ToLocalTime().ToString("dd MMM yy HH:mm") : "Never")
+                            </td>
+                            <td>
+                                @if (u.IsActive)
+                                {
+                                    <span class="badge badge-active">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-inactive">Inactive</span>
+                                }
+                            </td>
+                            <td class="actions">
+                                <div style="display: flex; gap: 6px;">
+                                    <a asp-action="EditUser" asp-route-id="@u.Id"
+                                       class="btn-icon" title="Edit">✏️</a>
+                                    <form asp-action="ToggleUserStatus" asp-route-id="@u.Id"
+                                          method="post" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit"
+                                                class="btn-icon @(u.IsActive ? "danger" : "")"
+                                                title="@(u.IsActive ? "Deactivate" : "Activate")"
+                                                data-confirm="@(u.IsActive ? "Deactivate this user?" : "Activate this user?")">
+                                            @(u.IsActive ? "🚫" : "✅")
+                                        </button>
+                                    </form>
+                                    <a asp-action="ResetPassword" asp-route-id="@u.Id"
+                                       class="btn-icon" title="Reset Password">🔑</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">👥</div>
+            <div class="empty-state-title">No users found</div>
+            <div class="empty-state-text">Try adjusting your filters or add a new user.</div>
+        </div>
+    }
+</div>

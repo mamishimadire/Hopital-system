@@ -1,0 +1,64 @@
+@using MedBridge.Models
+@model HelpTicket
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Raise Support Ticket";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Raise Support Ticket</h1>
+        <p class="page-subheading">Describe your issue and we'll get back to you</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline">← Back</a>
+</div>
+
+<div class="card" style="max-width: 720px;">
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+            <div class="form-group">
+                <label class="form-label" asp-for="Subject">Subject <span class="required">*</span></label>
+                <input class="form-control" asp-for="Subject" placeholder="Brief description of the issue" autofocus />
+                <span asp-validation-for="Subject" class="field-validation-error"></span>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label" asp-for="Category">Category</label>
+                    <select class="form-control form-select" asp-for="Category">
+                        @foreach (var c in Enum.GetValues<TicketCategory>())
+                        {
+                            <option value="@c">@c</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" asp-for="Priority">Priority</label>
+                    <select class="form-control form-select" asp-for="Priority">
+                        @foreach (var p in Enum.GetValues<TicketPriority>())
+                        {
+                            <option value="@p">@p</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" asp-for="Description">Description <span class="required">*</span></label>
+                <textarea class="form-control" asp-for="Description" rows="6"
+                          placeholder="Please provide as much detail as possible — steps to reproduce, error messages, screenshots if relevant…"></textarea>
+                <span asp-validation-for="Description" class="field-validation-error"></span>
+            </div>
+
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-primary">Submit Ticket</button>
+                <a asp-action="Index" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

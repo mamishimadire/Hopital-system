@@ -1,0 +1,100 @@
+@using MedBridge.ViewModels.Admin
+@model CreateUserViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Create User";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Create User</h1>
+        <p class="page-subheading">Add a new system user and assign their role</p>
+    </div>
+    <a asp-action="Users" class="btn btn-outline">← Back to Users</a>
+</div>
+
+<div class="card" style="max-width: 720px;">
+    <div class="card-body">
+        <form asp-action="CreateUser" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+            <!-- Personal Info -->
+            <div class="form-section-title">Personal Information</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label" asp-for="FullName">Full Name <span class="required">*</span></label>
+                    <input class="form-control" asp-for="FullName" placeholder="Dr. Jane Smith" />
+                    <span asp-validation-for="FullName" class="field-validation-error"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" asp-for="Email">Email Address <span class="required">*</span></label>
+                    <input class="form-control" asp-for="Email" type="email" placeholder="jane.smith@hospital.co.za" />
+                    <span asp-validation-for="Email" class="field-validation-error"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" asp-for="JobTitle">Job Title</label>
+                    <input class="form-control" asp-for="JobTitle" placeholder="e.g. Senior Pharmacist" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label" asp-for="Department">Department</label>
+                    <input class="form-control" asp-for="Department" placeholder="e.g. Pharmacy" />
+                </div>
+            </div>
+
+            <!-- Role & Access -->
+            <div class="form-section">
+                <div class="form-section-title">Role &amp; Access</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" asp-for="Role">Role <span class="required">*</span></label>
+                        <select class="form-control form-select" asp-for="Role">
+                            <option value="">— Select role —</option>
+                            @foreach (var r in new[] { "Doctor","Nurse","Pharmacist","PracticeAdmin","ProcurementOfficer","HeadOfProcurement","HeadOfSupplyChain","FinanceManager","ReceivingClerk","Auditor" })
+                            {
+                                <option value="@r">@r</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Role" class="field-validation-error"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" asp-for="ClientId">Client (Organisation)</label>
+                        <select class="form-control form-select" asp-for="ClientId"
+                                asp-items="@(ViewBag.Clients as IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)">
+                            <option value="">— None / System User —</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Password -->
+            <div class="form-section">
+                <div class="form-section-title">Set Password</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" asp-for="Password">Password <span class="required">*</span></label>
+                        <input class="form-control" asp-for="Password" type="password" />
+                        <span asp-validation-for="Password" class="field-validation-error"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" asp-for="ConfirmPassword">Confirm Password <span class="required">*</span></label>
+                        <input class="form-control" asp-for="ConfirmPassword" type="password" />
+                        <span asp-validation-for="ConfirmPassword" class="field-validation-error"></span>
+                    </div>
+                </div>
+                <p style="font-size: 12px; color: var(--text-muted);">
+                    Minimum 6 characters, must include uppercase, lowercase, digit, and special character.
+                </p>
+            </div>
+
+            <div style="margin-top: 24px; display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-primary">Create User</button>
+                <a asp-action="Users" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
