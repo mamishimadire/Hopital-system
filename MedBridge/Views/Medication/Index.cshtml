@@ -1,0 +1,164 @@
+@model IEnumerable<MedBridge.Models.Medication>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Medications";
+    bool canEdit     = User.IsInRole("Admin") || User.IsInRole("Pharmacist");
+    bool canDispense = User.IsInRole("Pharmacist") || User.IsInRole("Nurse");
+    bool canCreate   = User.IsInRole("Admin") || User.IsInRole("Pharmacist") || User.IsInRole("ProcurementOfficer");
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Medication Inventory</h1>
+        <p class="page-subheading">All dispensable medicines — blockchain-audited</p>
+    </div>
+    @if (canCreate)
+    {
+        <a asp-action="Create" class="btn btn-primary">+ Add Medication</a>
+    }
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<!-- Stats -->
+<div class="stats-grid" style="margin-bottom: 20px;">
+    <a asp-action="Index" class="stat-card" style="text-decoration:none;">
+        <div class="stat-label">Total Active</div>
+        <div class="stat-value">@ViewBag.TotalActive</div>
+    </a>
+    <a asp-action="Index" asp-route-filter="low" class="stat-card" style="text-decoration:none; border-left: 4px solid var(--amber);">
+        <div class="stat-label">Low Stock</div>
+        <div class="stat-value" style="color:var(--amber);">@ViewBag.TotalLowStock</div>
+    </a>
+    <a asp-action="Index" asp-route-filter="out" class="stat-card" style="text-decoration:none; border-left: 4px solid var(--danger);">
+        <div class="stat-label">Out of Stock</div>
+        <div class="stat-value" style="color:var(--danger);">@ViewBag.TotalOutOfStock</div>
+    </a>
+    <a asp-action="Index" asp-route-filter="expiring" class="stat-card" style="text-decoration:none; border-left: 4px solid var(--warning);">
+        <div class="stat-label">Expiring Soon</div>
+        <div class="stat-value" style="color:var(--warning);">@ViewBag.TotalExpiring</div>
+    </a>
+</div>
+
+<!-- Search + Filter -->
+<div class="card" style="margin-bottom: 16px;">
+    <div class="card-body" style="padding: 12px 16px;">
+        <form method="get" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+            <input type="text" name="search" value="@ViewBag.Search" class="form-control"
+                   placeholder="Search by name or code…" style="max-width: 280px;" />
+            <select name="filter" class="form-control form-select" style="max-width: 180px;">
+                <option value="">All Active</option>
+                <option value="low"      selected="@(ViewBag.Filter == "low"      ? "selected" : null)">Low Stock</option>
+                <option value="out"      selected="@(ViewBag.Filter == "out"      ? "selected" : null)">Out of Stock</option>
+                <option value="expiring" selected="@(ViewBag.Filter == "expiring" ? "selected" : null)">Expiring Soon</option>
+                <option value="expired"  selected="@(ViewBag.Filter == "expired"  ? "selected" : null)">Expired</option>
+            </select>
+            <button type="submit" class="btn btn-outline">Filter</button>
+            <a asp-action="Index" class="btn btn-outline">Clear</a>
+        </form>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card">
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Medication</th>
+                    <th>Batch</th>
+                    <th>Expiry</th>
+                    <th>Stock</th>
+                    <th>Min</th>
+                    <th>Unit Cost</th>
+                    <th>Supplier</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var m in Model)
+                {
+                    <tr>
+                        <td class="text-mono" style="color:var(--amber-dark);">@m.Code</td>
+                        <td style="font-weight: 600;">@m.Name</td>
+                        <td class="text-mono" style="font-size:12px;">@(m.BatchNumber ?? "—")</td>
+                        <td>
+                            @if (m.ExpiryDate.HasValue)
+                            {
+                                <span class="@(m.IsExpired ? "badge badge-out" : m.IsExpiringSoon ? "badge badge-pending" : "")">
+                                    @m.ExpiryDate.Value.ToString("MMM yyyy")
+                                </span>
+                            }
+                            else { <span style="color:var(--text-muted);">—</span> }
+                        </td>
+                        <td>
+                            @if (m.IsOutOfStock)
+                            {
+                                <span class="badge badge-out">0</span>
+                            }
+                            else if (m.IsLowStock)
+                            {
+                                <span class="badge badge-pending">@m.Quantity</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-approved">@m.Quantity</span>
+                            }
+                        </td>
+                        <td style="color:var(--text-muted);">@m.MinimumQuantity</td>
+                        <td>R @m.UnitCost.ToString("N2")</td>
+                        <td style="font-size:13px;">@(m.Supplier?.Name ?? "—")</td>
+                        <td>
+                            @if (!m.IsActive)
+                            {
+                                <span class="badge badge-inactive">Inactive</span>
+                            }
+                            else if (m.IsExpired)
+                            {
+                                <span class="badge badge-out">Expired</span>
+                            }
+                            else if (m.IsOutOfStock)
+                            {
+                                <span class="badge badge-out">Out of Stock</span>
+                            }
+                            else if (m.IsLowStock)
+                            {
+                                <span class="badge badge-pending">Low Stock</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-approved">Available</span>
+                            }
+                        </td>
+                        <td>
+                            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                                @if (canDispense && m.Quantity > 0 && !m.IsExpired)
+                                {
+                                    <a asp-action="Dispense" asp-route-id="@m.Id" class="btn btn-primary btn-sm">Dispense</a>
+                                }
+                                @if (canEdit)
+                                {
+                                    <a asp-action="AdjustStock" asp-route-id="@m.Id" class="btn btn-outline btn-sm">Adjust</a>
+                                    <a asp-action="Edit" asp-route-id="@m.Id" class="btn btn-outline btn-sm">Edit</a>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="10" style="text-align:center; padding:32px; color:var(--text-muted);">No medications found.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,141 @@
+@model IEnumerable<MedBridge.Models.Prescription>
+@using MedBridge.Models
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Prescriptions";
+    bool isDoctor     = User.IsInRole("Doctor") || User.IsInRole("Admin");
+    bool isPharmacist = User.IsInRole("Pharmacist") || User.IsInRole("Admin");
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Prescriptions</h1>
+        <p class="page-subheading">Every dispense is permanently recorded on the blockchain</p>
+    </div>
+    @if (isDoctor)
+    {
+        <a asp-action="Create" class="btn btn-primary">+ New Prescription</a>
+    }
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<!-- Stats -->
+<div class="stats-grid" style="margin-bottom: 20px;">
+    <a asp-action="Index" class="stat-card" style="text-decoration:none;">
+        <div class="stat-label">Pending</div>
+        <div class="stat-value" style="color:var(--amber);">@ViewBag.PendingCount</div>
+    </a>
+    <a asp-action="Index" asp-route-status="Dispensed" class="stat-card" style="text-decoration:none;">
+        <div class="stat-label">Dispensed</div>
+        <div class="stat-value" style="color:var(--success);">@ViewBag.DispensedCount</div>
+    </a>
+</div>
+
+<!-- Filter -->
+<div class="card" style="margin-bottom: 16px;">
+    <div class="card-body" style="padding: 12px 16px;">
+        <form method="get" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+            <input type="text" name="search" value="@ViewBag.Search" class="form-control"
+                   placeholder="Search RxNumber, patient, medication…" style="max-width: 300px;" />
+            <select name="status" class="form-control form-select" style="max-width: 160px;">
+                <option value="">All</option>
+                <option value="Pending"   selected="@(ViewBag.StatusFilter == "Pending"   ? "selected" : null)">Pending</option>
+                <option value="Dispensed" selected="@(ViewBag.StatusFilter == "Dispensed" ? "selected" : null)">Dispensed</option>
+                <option value="Cancelled" selected="@(ViewBag.StatusFilter == "Cancelled" ? "selected" : null)">Cancelled</option>
+            </select>
+            <button type="submit" class="btn btn-outline">Filter</button>
+            <a asp-action="Index" class="btn btn-outline">Clear</a>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Rx #</th>
+                    <th>Patient</th>
+                    <th>Medication</th>
+                    <th>Qty</th>
+                    <th>Dosage</th>
+                    <th>Prescribed By</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Dispensed By</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var rx in Model)
+                {
+                    <tr>
+                        <td class="text-mono fw-600" style="color:var(--amber-dark);">@rx.RxNumber</td>
+                        <td>@rx.Patient?.FullName</td>
+                        <td>@rx.Medication?.Name</td>
+                        <td>@rx.Quantity @rx.Medication?.Unit</td>
+                        <td style="font-size:12px; color:var(--text-muted);">@(rx.Dosage ?? "—")</td>
+                        <td style="font-size:13px;">@rx.PrescribedBy?.FullName</td>
+                        <td style="font-size:12px;">@rx.PrescribedAt.ToLocalTime().ToString("dd MMM yyyy")</td>
+                        <td>
+                            @{
+                                var cls = rx.Status switch {
+                                    PrescriptionStatus.Pending   => "badge-pending",
+                                    PrescriptionStatus.Dispensed => "badge-approved",
+                                    PrescriptionStatus.Cancelled => "badge-inactive",
+                                    _ => ""
+                                };
+                            }
+                            <span class="badge @cls">@rx.Status</span>
+                        </td>
+                        <td style="font-size:12px;">
+                            @if (rx.DispensedBy != null)
+                            {
+                                <span>@rx.DispensedBy.FullName<br />
+                                <span style="color:var(--text-muted);">@rx.DispensedAt?.ToLocalTime().ToString("dd MMM HH:mm")</span></span>
+                            }
+                            else { <span style="color:var(--text-muted);">—</span> }
+                        </td>
+                        <td>
+                            @if (rx.Status == PrescriptionStatus.Pending)
+                            {
+                                @if (isPharmacist)
+                                {
+                                    <form asp-action="Dispense" asp-route-id="@rx.Id" method="post" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-primary btn-sm"
+                                                onclick="return confirm('Dispense @rx.Medication?.Name × @rx.Quantity for @rx.Patient?.FullName?')">
+                                            Dispense
+                                        </button>
+                                    </form>
+                                }
+                                @if (isDoctor)
+                                {
+                                    <form asp-action="Cancel" asp-route-id="@rx.Id" method="post" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-outline btn-sm"
+                                                onclick="return confirm('Cancel this prescription?')">
+                                            Cancel
+                                        </button>
+                                    </form>
+                                }
+                            }
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="10" style="text-align:center; padding:32px; color:var(--text-muted);">No prescriptions found.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
