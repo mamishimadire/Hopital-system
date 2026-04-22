@@ -1,0 +1,33 @@
+# Build output
+bin/
+obj/
+
+# NuGet packages
+*.nupkg
+packages/
+.nuget/
+
+# VS / Rider
+.vs/
+.idea/
+*.user
+*.suo
+*.userprefs
+
+# Publish profiles
+**/Properties/PublishProfiles/
+
+# App secrets
+appsettings.*.json
+!appsettings.Development.json
+secrets.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Downloaded installers / packages
+*.deb
+*.rpm
+*.exe
+*.msi
