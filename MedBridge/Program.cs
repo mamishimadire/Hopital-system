@@ -8,12 +8,17 @@ AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ── Database
+// ── Database — auto-detect provider from connection string prefix
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString));
+{
+    if (connectionString.StartsWith("Host=") || connectionString.StartsWith("Server=localhost;Port="))
+        options.UseNpgsql(connectionString);
+    else
+        options.UseSqlite(connectionString);
+});
 
 // ── Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
